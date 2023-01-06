@@ -37,19 +37,19 @@ OBJS = \
   $K/plic.o \
   $K/virtio_disk.o
 
-ifeq ($(LAB),pgtbl)
+ifeq ($(LAB),2)
 OBJS += \
 	$K/vmcopyin.o
 endif
 
-ifeq ($(LAB),$(filter $(LAB), pgtbl lock))
+ifeq ($(LAB),$(filter $(LAB), 2 7))
 OBJS += \
 	$K/stats.o\
 	$K/sprintf.o
 endif
 
 
-ifeq ($(LAB),net)
+ifeq ($(LAB),6)
 OBJS += \
 	$K/e1000.o \
 	$K/net.o \
@@ -87,8 +87,7 @@ OBJDUMP = $(TOOLPREFIX)objdump
 CFLAGS = -Wall -Werror -O -fno-omit-frame-pointer -ggdb -gdwarf-2
 
 ifdef LAB
-LABUPPER = $(shell echo $(LAB) | tr a-z A-Z)
-XCFLAGS += -DSOL_$(LABUPPER) -DLAB_$(LABUPPER)
+XCFLAGS += -DSOL_$(LAB) -DLAB_$(LAB)
 endif
 
 CFLAGS += $(XCFLAGS)
@@ -128,7 +127,7 @@ tags: $(OBJS) _init
 
 ULIB = $U/ulib.o $U/usys.o $U/printf.o $U/umalloc.o
 
-ifeq ($(LAB),$(filter $(LAB), pgtbl lock))
+ifeq ($(LAB),$(filter $(LAB), 2 7))
 ULIB += $U/statistics.o
 endif
 
@@ -179,28 +178,28 @@ UPROGS=\
 
 
 
-ifeq ($(LAB),$(filter $(LAB), pgtbl lock))
+ifeq ($(LAB),$(filter $(LAB), 2 7))
 UPROGS += \
 	$U/_stats
 endif
 
-ifeq ($(LAB),traps)
+ifeq ($(LAB),4)
 UPROGS += \
 	$U/_call\
 	$U/_bttest
 endif
 
-ifeq ($(LAB),lazy)
+ifeq ($(LAB),3)
 UPROGS += \
 	$U/_lazytests
 endif
 
-ifeq ($(LAB),cow)
+ifeq ($(LAB),3)
 UPROGS += \
 	$U/_cowtest
 endif
 
-ifeq ($(LAB),thread)
+ifeq ($(LAB),7)
 UPROGS += \
 	$U/_uthread
 
@@ -217,26 +216,26 @@ barrier: notxv6/barrier.c
 	gcc -o barrier -g -O2 notxv6/barrier.c -pthread
 endif
 
-ifeq ($(LAB),lock)
+ifeq ($(LAB),7)
 UPROGS += \
 	$U/_kalloctest\
 	$U/_bcachetest
 endif
 
-ifeq ($(LAB),fs)
+ifeq ($(LAB),5)
 UPROGS += \
 	$U/_bigfile
 endif
 
 
 
-ifeq ($(LAB),net)
+ifeq ($(LAB),6)
 UPROGS += \
 	$U/_nettests
 endif
 
 UEXTRA=
-ifeq ($(LAB),util)
+ifeq ($(LAB),1)
 	UEXTRA += user/xargstest.sh
 endif
 
@@ -263,7 +262,7 @@ QEMUGDB = $(shell if $(QEMU) -help | grep -q '^-gdb'; \
 ifndef CPUS
 CPUS := 3
 endif
-ifeq ($(LAB),fs)
+ifeq ($(LAB),5)
 CPUS := 1
 endif
 
@@ -274,7 +273,7 @@ QEMUOPTS += -global virtio-mmio.force-legacy=false
 QEMUOPTS += -drive file=fs.img,if=none,format=raw,id=x0
 QEMUOPTS += -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0
 
-ifeq ($(LAB),net)
+ifeq ($(LAB),6)
 QEMUOPTS += -netdev user,id=net0,hostfwd=udp::$(FWDPORT)-:2000 -object filter-dump,id=net0,netdev=net0,file=packets.pcap
 QEMUOPTS += -device e1000,netdev=net0,bus=pcie.0
 endif
@@ -289,7 +288,7 @@ qemu-gdb: $K/kernel .gdbinit fs.img
 	@echo "*** Now run 'gdb' in another window." 1>&2
 	$(QEMU) $(QEMUOPTS) -S $(QEMUGDB)
 
-ifeq ($(LAB),net)
+ifeq ($(LAB),6)
 # try to generate a unique port for the echo server
 SERVERPORT = $(shell expr `id -u` % 5000 + 25099)
 
@@ -315,7 +314,7 @@ grade:
 	@echo $(MAKE) clean
 	@$(MAKE) clean || \
           (echo "'make clean' failed.  HINT: Do you have another running instance of xv6?" && exit 1)
-	./grade-lab-$(LAB) $(GRADEFLAGS)
+	./grade-lab$(LAB) $(GRADEFLAGS)
 
 ##
 ## FOR web handin
@@ -326,7 +325,7 @@ WEBSUB := https://6828.scripts.mit.edu/2020/handin.py
 
 handin: tarball-pref myapi.key
 	@SUF=$(LAB); \
-	curl -f -F file=@lab-$$SUF-handin.tar.gz -F key=\<myapi.key $(WEBSUB)/upload \
+	curl -f -F file=@lab$$SUF-handin.tar.gz -F key=\<myapi.key $(WEBSUB)/upload \
 	    > /dev/null || { \
 		echo ; \
 		echo Submit seems to have failed.; \
@@ -337,9 +336,9 @@ handin-check:
 		echo No .git directory, is this a git repository?; \
 		false; \
 	fi
-	@if test "$$(git symbolic-ref HEAD)" != refs/heads/$(LAB); then \
+	@if test "$$(git symbolic-ref HEAD)" != refs/heads/lab$(LAB); then \
 		git branch; \
-		read -p "You are not on the $(LAB) branch.  Hand-in the current branch? [y/N] " r; \
+		read -p "You are not on the lab$(LAB) branch.  Hand-in the current branch? [y/N] " r; \
 		test "$$r" = y; \
 	fi
 	@if ! git diff-files --quiet || ! git diff-index --quiet --cached HEAD; then \
@@ -357,16 +356,16 @@ handin-check:
 UPSTREAM := $(shell git remote -v | grep -m 1 "xv6-labs-2020" | awk '{split($$0,a," "); print a[1]}')
 
 tarball: handin-check
-	git archive --format=tar HEAD | gzip > lab-$(LAB)-handin.tar.gz
+	git archive --format=tar HEAD | gzip > lab$(LAB)-handin.tar.gz
 
 tarball-pref: handin-check
 	@SUF=$(LAB); \
 	git archive --format=tar HEAD > lab-$$SUF-handin.tar; \
-	git diff $(UPSTREAM)/$(LAB) > /tmp/lab-$$SUF-diff.patch; \
-	tar -rf lab-$$SUF-handin.tar /tmp/lab-$$SUF-diff.patch; \
-	gzip -c lab-$$SUF-handin.tar > lab-$$SUF-handin.tar.gz; \
-	rm lab-$$SUF-handin.tar; \
-	rm /tmp/lab-$$SUF-diff.patch; \
+	git diff $(UPSTREAM)/lab$(LAB) > /tmp/lab$$SUF-diff.patch; \
+	tar -rf lab$$SUF-handin.tar /tmp/lab$$SUF-diff.patch; \
+	gzip -c lab$$SUF-handin.tar > lab$$SUF-handin.tar.gz; \
+	rm lab$$SUF-handin.tar; \
+	rm /tmp/lab$$SUF-diff.patch; \
 
 myapi.key:
 	@echo Get an API key for yourself by visiting $(WEBSUB)/
