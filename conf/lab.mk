@@ -1,1 +1,1 @@
-LAB=syscall
+LAB=1

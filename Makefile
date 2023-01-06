@@ -1,7 +1,7 @@
 
 # To compile and run with a lab solution, set the lab name in lab.mk
-# (e.g., LB=util).  Run make grade to test solution with the lab's
-# grade script (e.g., grade-lab-util).
+# (e.g., LAB=1).  Run make grade to test solution with the lab's
+# grade script (e.g., grade-lab1).
 
 -include conf/lab.mk
 
@@ -226,7 +226,7 @@ grade:
 	@echo $(MAKE) clean
 	@$(MAKE) clean || \
           (echo "'make clean' failed.  HINT: Do you have another running instance of xv6?" && exit 1)
-	./grade-lab-$(LAB) $(GRADEFLAGS)
+	./grade-lab$(LAB) $(GRADEFLAGS)
 
 ##
 ## FOR web handin
@@ -248,9 +248,9 @@ handin-check:
 		echo No .git directory, is this a git repository?; \
 		false; \
 	fi
-	@if test "$$(git symbolic-ref HEAD)" != refs/heads/$(LAB); then \
+	@if test "$$(git symbolic-ref HEAD)" != refs/heads/lab$(LAB); then \
 		git branch; \
-		read -p "You are not on the $(LAB) branch.  Hand-in the current branch? [y/N] " r; \
+		read -p "You are not on the lab$(LAB) branch.  Hand-in the current branch? [y/N] " r; \
 		test "$$r" = y; \
 	fi
 	@if ! git diff-files --quiet || ! git diff-index --quiet --cached HEAD; then \
@@ -268,16 +268,16 @@ handin-check:
 UPSTREAM := $(shell git remote -v | grep -m 1 "xv6-labs-2020" | awk '{split($$0,a," "); print a[1]}')
 
 tarball: handin-check
-	git archive --format=tar HEAD | gzip > lab-$(LAB)-handin.tar.gz
+	git archive --format=tar HEAD | gzip > lab$(LAB)-handin.tar.gz
 
 tarball-pref: handin-check
 	@SUF=$(LAB); \
-	git archive --format=tar HEAD > lab-$$SUF-handin.tar; \
-	git diff $(UPSTREAM)/$(LAB) > /tmp/lab-$$SUF-diff.patch; \
-	tar -rf lab-$$SUF-handin.tar /tmp/lab-$$SUF-diff.patch; \
-	gzip -c lab-$$SUF-handin.tar > lab-$$SUF-handin.tar.gz; \
-	rm lab-$$SUF-handin.tar; \
-	rm /tmp/lab-$$SUF-diff.patch; \
+	git archive --format=tar HEAD > lab$$SUF-handin.tar; \
+	git diff $(UPSTREAM)/lab$(LAB) > /tmp/lab$$SUF-diff.patch; \
+	tar -rf lab$$SUF-handin.tar /tmp/lab$$SUF-diff.patch; \
+	gzip -c lab$$SUF-handin.tar > lab$$SUF-handin.tar.gz; \
+	rm lab$$SUF-handin.tar; \
+	rm /tmp/lab$$SUF-diff.patch; \
 
 myapi.key:
 	@echo Get an API key for yourself by visiting $(WEBSUB)/
