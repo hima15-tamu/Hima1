@@ -34,10 +34,10 @@ statsread(int user_dst, uint64 dst, int n)
   acquire(&stats.lock);
 
   if(stats.sz == 0) {
-#ifdef LAB_PGTBL
+#ifdef LAB_2
     stats.sz = statscopyin(stats.buf, BUFSZ);
 #endif
-#ifdef LAB_LOCK
+#ifdef LAB_7
     stats.sz = statslock(stats.buf, BUFSZ);
 #endif
   }

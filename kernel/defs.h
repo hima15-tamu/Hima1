@@ -8,7 +8,7 @@ struct spinlock;
 struct sleeplock;
 struct stat;
 struct superblock;
-#ifdef LAB_NET
+#ifdef LAB_6
 struct mbuf;
 struct sock;
 #endif
@@ -204,7 +204,7 @@ void            statsinc(void);
 // sprintf.c
 int             snprintf(char*, int, char*, ...);
 
-#ifdef LAB_NET
+#ifdef LAB_6
 // pci.c
 void            pci_init();
 

@@ -12,7 +12,7 @@ main()
 {
   if(cpuid() == 0){
     consoleinit();
-#if defined(LAB_PGTBL) || defined(LAB_LOCK)
+#if defined(LAB_2) || defined(LAB_7)
     statsinit();
 #endif
     printfinit();
@@ -31,7 +31,7 @@ main()
     iinit();         // inode table
     fileinit();      // file table
     virtio_disk_init(); // emulated hard disk
-#ifdef LAB_NET
+#ifdef LAB_6
     pci_init();
     sockinit();
 #endif    
