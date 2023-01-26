@@ -1,7 +1,7 @@
 
 # To compile and run with a lab solution, set the lab name in lab.mk
-# (e.g., LB=util).  Run make grade to test solution with the lab's
-# grade script (e.g., grade-lab-util).
+# (e.g., LAB=1).  Run make grade to test solution with the lab's
+# grade script (e.g., grade-lab1).
 
 -include conf/lab.mk
 
@@ -35,7 +35,7 @@ OBJS = \
   $K/sysfile.o \
   $K/kernelvec.o \
   $K/plic.o \
-  $K/virtio_disk.o
+  $K/virtio_disk.o \
 
 ifeq ($(LAB),2)
 OBJS += \
@@ -76,7 +76,7 @@ TOOLPREFIX := $(shell if riscv64-unknown-elf-objdump -i 2>&1 | grep 'elf64-big' 
 	echo "***" 1>&2; exit 1; fi)
 endif
 
-QEMU = qemu-system-riscv64
+QEMU ?= qemu-system-riscv64
 
 CC = $(TOOLPREFIX)gcc
 AS = $(TOOLPREFIX)gas
@@ -288,6 +288,9 @@ qemu-gdb: $K/kernel .gdbinit fs.img
 	@echo "*** Now run 'gdb' in another window." 1>&2
 	$(QEMU) $(QEMUOPTS) -S $(QEMUGDB)
 
+run-gdb:
+	$(if $(shell which gdb-multiarch), gdb-multiarch, $(TOOLPREFIX)gdb)
+
 ifeq ($(LAB),6)
 # try to generate a unique port for the echo server
 SERVERPORT = $(shell expr `id -u` % 5000 + 25099)
@@ -321,15 +324,13 @@ grade:
 ##
 
 
-WEBSUB := https://6828.scripts.mit.edu/2020/handin.py
+##
+## FOR web handin
+##
 
-handin: tarball-pref myapi.key
+handin: handin-check
 	@SUF=$(LAB); \
-	curl -f -F file=@lab$$SUF-handin.tar.gz -F key=\<myapi.key $(WEBSUB)/upload \
-	    > /dev/null || { \
-		echo ; \
-		echo Submit seems to have failed.; \
-		echo Please go to $(WEBSUB)/ and upload the tarball manually.; }
+	git tag lab$$SUF-handin HEAD && git push --tags
 
 handin-check:
 	@if ! test -d .git; then \
@@ -353,37 +354,7 @@ handin-check:
 		test "$$r" = y; \
 	fi
 
-UPSTREAM := $(shell git remote -v | grep -m 1 "xv6-labs-2020" | awk '{split($$0,a," "); print a[1]}')
-
 tarball: handin-check
 	git archive --format=tar HEAD | gzip > lab$(LAB)-handin.tar.gz
 
-tarball-pref: handin-check
-	@SUF=$(LAB); \
-	git archive --format=tar HEAD > lab$$SUF-handin.tar; \
-	git diff $(UPSTREAM)/lab$(LAB) > /tmp/lab$$SUF-diff.patch; \
-	tar -rf lab$$SUF-handin.tar /tmp/lab$$SUF-diff.patch; \
-	gzip -c lab$$SUF-handin.tar > lab$$SUF-handin.tar.gz; \
-	rm lab$$SUF-handin.tar; \
-	rm /tmp/lab$$SUF-diff.patch; \
-
-myapi.key:
-	@echo Get an API key for yourself by visiting $(WEBSUB)/
-	@read -p "Please enter your API key: " k; \
-	if test `echo "$$k" |tr -d '\n' |wc -c` = 32 ; then \
-		TF=`mktemp -t tmp.XXXXXX`; \
-		if test "x$$TF" != "x" ; then \
-			echo "$$k" |tr -d '\n' > $$TF; \
-			mv -f $$TF $@; \
-		else \
-			echo mktemp failed; \
-			false; \
-		fi; \
-	else \
-		echo Bad API key: $$k; \
-		echo An API key should be 32 characters long.; \
-		false; \
-	fi;
-
-
-.PHONY: handin tarball tarball-pref clean grade handin-check
+.PHONY: handin tarball clean grade handin-check
