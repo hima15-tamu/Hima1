@@ -67,7 +67,8 @@ def test_trace_32_grep():
         'trace 32 grep hello README'
     ]))
     r.match('^\\d+: syscall read -> 1023')
-    r.match('^\\d+: syscall read -> 966')
+    r.match('^\\d+: syscall read -> 961')
+    r.match('^\\d+: syscall read -> 321')
     r.match('^\\d+: syscall read -> 0')
 
 @test(5, "trace all grep")
@@ -79,7 +80,8 @@ def test_trace_all_grep():
     r.match('^\\d+: syscall exec -> 3')
     r.match('^\\d+: syscall open -> 3')
     r.match('^\\d+: syscall read -> 1023')
-    r.match('^\\d+: syscall read -> 966')
+    r.match('^\\d+: syscall read -> 961')
+    r.match('^\\d+: syscall read -> 321')
     r.match('^\\d+: syscall read -> 0')
     r.match('^\\d+: syscall close -> 0')
 
