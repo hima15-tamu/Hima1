@@ -29,6 +29,7 @@ int connect(uint32, uint16, uint16);
 #endif
 #ifdef LAB_2
 int pgaccess(void *base, int len, void *mask);
+int mkhugepg(void *base);
 // usyscall region
 int ugetpid(void);
 #endif

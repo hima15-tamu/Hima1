@@ -107,6 +107,7 @@ extern uint64 sys_connect(void);
 #endif
 #ifdef LAB_2
 extern uint64 sys_pgaccess(void);
+extern uint64 sys_mkhugepg(void);
 #endif
 
 // An array mapping syscall numbers from syscall.h
@@ -138,6 +139,7 @@ static uint64 (*syscalls[])(void) = {
 #endif
 #ifdef LAB_2
 [SYS_pgaccess] sys_pgaccess,
+[SYS_mkhugepg] sys_mkhugepg,
 #endif
 };
 

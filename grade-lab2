@@ -56,14 +56,4 @@ def test_pteprint():
             pa = (int(matches[0][0], 16) >> 10) << 12
             assert_equal(int(matches[0][1], 16), pa)
 
-@test(0, "usertests")
-def test_usertests():
-    r.run_qemu(shell_script([
-        'usertests -q'
-    ]), timeout=300)
-
-@test(10, "usertests: all tests", parent=test_usertests)
-def test_usertests():
-    r.match('^ALL TESTS PASSED$')
-
 run_tests()

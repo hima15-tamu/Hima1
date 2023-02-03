@@ -6,12 +6,13 @@
 
 void ugetpid_test();
 void pgaccess_test();
-
+void hugepage_test();
 int
 main(int argc, char *argv[])
 {
   ugetpid_test();
   pgaccess_test();
+  hugepage_test();
   printf("pgtbltest: all tests succeeded\n");
   exit(0);
 }
@@ -67,4 +68,31 @@ pgaccess_test()
     err("incorrect access bits set");
   free(buf);
   printf("pgaccess_test: OK\n");
+}
+
+void
+hugepage_test()
+{
+  char *buf, *hpg;
+#define SZ 4096
+  char stats[SZ];
+  printf("hugepage_test starting\n");
+  testname = "hugepage_test";
+  buf = malloc(1024 * PGSIZE);
+  hpg = (char *)(((unsigned long)buf + 512 * PGSIZE - 1) & ~(512 * PGSIZE - 1));
+  hpg[PGSIZE * 1] += 1;
+  hpg[PGSIZE * 2] += 1;
+  hpg[PGSIZE * 511] += 1;
+  statistics(stats, SZ);
+  printf("before mkhugepg: %s\n", stats);
+  if (mkhugepg(hpg) < 0)
+    err("mkhugepg failed");
+  hpg[PGSIZE * 1] += 1;
+  hpg[PGSIZE * 2] += 1;
+  hpg[PGSIZE * 511] += 1;
+  statistics(stats, SZ);
+  printf("after mkhugepg: %s\n", stats);
+  printf("count = %d\n", hpg[PGSIZE * 511]);
+  free(buf);
+  printf("hugepage_test: OK\n");
 }

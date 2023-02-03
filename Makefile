@@ -161,7 +161,7 @@ tags: $(OBJS) _init
 
 ULIB = $U/ulib.o $U/usys.o $U/printf.o $U/umalloc.o
 
-ifeq ($(LAB),7)
+ifeq ($(LAB),$(filter $(LAB), 2 7))
 ULIB += $U/statistics.o
 endif
 
