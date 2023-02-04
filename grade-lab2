@@ -21,21 +21,7 @@ VAL_RE = "(0x00000000[0-9a-f]+)"
 INDENT_RE = r"\s*\.\.\s*"
 INDENT_ESC = "\\\s*\.\.\\\s*"
 
-@test(0, "pgtbltest")
-def test_pgtbltest():
-    r.run_qemu(shell_script([
-        'pgtbltest'
-    ]), timeout=300)
-
-@test(10, "pgtbltest: ugetpid", parent=test_pgtbltest)
-def test_nettest_():
-    r.match('^ugetpid_test: OK$')
-
-@test(10, "pgtbltest: pgaccess", parent=test_pgtbltest)
-def test_nettest_():
-    r.match('^pgaccess_test: OK$')
-
-@test(10, "pte printout")
+@test(20, "pte printout")
 def test_pteprint():
     first = True
     r.run_qemu(shell_script([
@@ -55,5 +41,23 @@ def test_pteprint():
             assert_equal(len(matches[0]), 2)
             pa = (int(matches[0][0], 16) >> 10) << 12
             assert_equal(int(matches[0][1], 16), pa)
+
+@test(0, "pgtbltest")
+def test_pgtbltest():
+    r.run_qemu(shell_script([
+        'pgtbltest'
+    ]), timeout=300)
+
+@test(20, "pgtbltest: ugetpid", parent=test_pgtbltest)
+def test_nettest_():
+    r.match('^ugetpid_test: OK$')
+
+@test(30, "pgtbltest: pgaccess", parent=test_pgtbltest)
+def test_nettest_():
+    r.match('^pgaccess_test: OK$')
+
+@test(30, "pgtbltest: hugepage", parent=test_pgtbltest)
+def test_nettest_():
+    r.match('^hugepage_test: OK$')
 
 run_tests()
