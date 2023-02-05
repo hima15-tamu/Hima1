@@ -11,6 +11,18 @@
         "sstream": "c",
         "streambuf": "c",
         "user.h": "c",
-        "types.h": "c"
+        "types.h": "c",
+        "stat.h": "c",
+        "any": "c",
+        "array": "c",
+        "bitset": "c",
+        "string_view": "c",
+        "initializer_list": "c",
+        "regex": "c",
+        "utility": "c",
+        "atomic": "cpp",
+        "complex": "c",
+        "typeindex": "c",
+        "typeinfo": "c"
     }
 }
