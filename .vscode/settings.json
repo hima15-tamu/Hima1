@@ -23,6 +23,12 @@
         "atomic": "cpp",
         "complex": "c",
         "typeindex": "c",
-        "typeinfo": "c"
+        "typeinfo": "c",
+        "future": "c",
+        "istream": "c",
+        "syscall.h": "c",
+        "spinlock.h": "c",
+        "proc.h": "c",
+        "defs.h": "c"
     }
 }

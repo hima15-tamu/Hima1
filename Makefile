@@ -36,6 +36,7 @@ OBJS = \
   $K/kernelvec.o \
   $K/plic.o \
   $K/virtio_disk.o \
+  $K/sysinfo.o \
 
 ifeq ($(LAB),pgtbl)
 OBJS += $K/vmcopyin.o
@@ -152,6 +153,8 @@ UPROGS=\
 	$U/_sleep\
 	$U/_pingpong\
 	$U/_find\
+	$U/_trace\
+	$U/_sysinfotest\
 
 
 
