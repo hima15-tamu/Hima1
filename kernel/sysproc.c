@@ -81,7 +81,12 @@ sys_pgaccess(void)
 int
 sys_mkhugepg(void)
 {
+  uint64 addr;
+
+  argaddr(0, &addr);
+
   // lab 2: your code here.
+
   return 0;
 }
 #endif
