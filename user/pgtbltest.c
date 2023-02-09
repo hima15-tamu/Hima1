@@ -74,7 +74,7 @@ void
 hugepage_test()
 {
   char *buf, *hpg;
-#define SZ 4096
+#define SZ 32
   char stats[SZ];
   printf("hugepage_test starting\n");
   testname = "hugepage_test";
