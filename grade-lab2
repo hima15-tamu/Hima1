@@ -58,6 +58,20 @@ def test_nettest_():
 
 @test(30, "pgtbltest: hugepage", parent=test_pgtbltest)
 def test_nettest_():
+    r.match('^count = 2$')
     r.match('^hugepage_test: OK$')
+    matches = re.findall(r'^before mkhugepg: (\d+) (\d+)$', r.qemu.output, re.MULTILINE)
+    assert_equal(len(matches), 1)
+    assert_equal(len(matches[0]), 2)
+    n_page_before = int(matches[0][0])
+    n_hugepage_before = int(matches[0][1])
+    matches = re.findall(r'^after mkhugepg: (\d+) (\d+)$', r.qemu.output, re.MULTILINE)
+    assert_equal(len(matches), 1)
+    assert_equal(len(matches[0]), 2)
+    n_page_after = int(matches[0][0])
+    n_hugepage_after = int(matches[0][1])
+    assert_equal(n_page_before, n_page_after + 512)
+    assert_equal(n_hugepage_before + 1, n_hugepage_after)
+    print(matches[0])
 
 run_tests()

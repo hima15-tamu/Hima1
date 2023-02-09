@@ -83,6 +83,7 @@ hugepage_test()
   hpg[PGSIZE * 1] += 1;
   hpg[PGSIZE * 2] += 1;
   hpg[PGSIZE * 511] += 1;
+  memset(stats, 0, SZ);
   statistics(stats, SZ);
   printf("before mkhugepg: %s\n", stats);
   if (mkhugepg(hpg) < 0)
@@ -90,6 +91,7 @@ hugepage_test()
   hpg[PGSIZE * 1] += 1;
   hpg[PGSIZE * 2] += 1;
   hpg[PGSIZE * 511] += 1;
+  memset(stats, 0, SZ);
   statistics(stats, SZ);
   printf("after mkhugepg: %s\n", stats);
   printf("count = %d\n", hpg[PGSIZE * 511]);
