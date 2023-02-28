@@ -29,7 +29,7 @@ def usertest_check(testcase, nextcase, output):
     if not re.search(r'\ntest {}: [\s\S]*OK\ntest {}'.format(testcase, nextcase), output):
         raise AssertionError('Failed ' + testcase)
 
-@test(30, "usertests: all tests", parent=test_usertests)
+@test(20, "usertests: all tests", parent=test_usertests)
 def test_usertests_all():
     r.match('^ALL TESTS PASSED$')
 

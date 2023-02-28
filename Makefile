@@ -1,7 +1,7 @@
 
 # To compile and run with a lab solution, set the lab name in lab.mk
-# (e.g., LB=util).  Run make grade to test solution with the lab's
-# grade script (e.g., grade-lab-util).
+# (e.g., LAB=1).  Run make grade to test solution with the lab's
+# grade script (e.g., grade-lab1).
 
 -include conf/lab.mk
 
@@ -10,12 +10,7 @@ U=user
 
 OBJS = \
   $K/entry.o \
-  $K/start.o \
-  $K/console.o \
-  $K/printf.o \
-  $K/uart.o \
   $K/kalloc.o \
-  $K/spinlock.o \
   $K/string.o \
   $K/main.o \
   $K/vm.o \
@@ -35,7 +30,7 @@ OBJS = \
   $K/sysfile.o \
   $K/kernelvec.o \
   $K/plic.o \
-  $K/virtio_disk.o
+  $K/virtio_disk.o \
 
 ifeq ($(LAB),2)
 OBJS += \
@@ -43,6 +38,34 @@ OBJS += \
 endif
 
 ifeq ($(LAB),$(filter $(LAB), 2 7))
+OBJS += \
+	$K/stats.o\
+	$K/sprintf.o
+endif
+
+
+ifeq ($(LAB),6)
+OBJS += \
+	$K/e1000.o \
+	$K/net.o \
+	$K/sysnet.o \
+	$K/pci.o
+endif
+
+
+OBJS_KCSAN = \
+  $K/start.o \
+  $K/console.o \
+  $K/printf.o \
+  $K/uart.o \
+  $K/spinlock.o
+
+ifdef KCSAN
+OBJS_KCSAN += \
+	$K/kcsan.o
+endif
+
+ifeq ($(LAB),7)
 OBJS += \
 	$K/stats.o\
 	$K/sprintf.o
@@ -76,7 +99,7 @@ TOOLPREFIX := $(shell if riscv64-unknown-elf-objdump -i 2>&1 | grep 'elf64-big' 
 	echo "***" 1>&2; exit 1; fi)
 endif
 
-QEMU = qemu-system-riscv64
+QEMU ?= qemu-system-riscv64
 
 CC = $(TOOLPREFIX)gcc
 AS = $(TOOLPREFIX)gas
@@ -97,8 +120,13 @@ CFLAGS += -ffreestanding -fno-common -nostdlib -mno-relax
 CFLAGS += -I.
 CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
 
-ifeq ($(LAB),net)
+ifeq ($(LAB),6)
 CFLAGS += -DNET_TESTS_PORT=$(SERVERPORT)
+endif
+
+ifdef KCSAN
+CFLAGS += -DKCSAN
+KCSANFLAG = -fsanitize=thread
 endif
 
 # Disable PIE when possible (for Ubuntu 16.10 toolchain)
@@ -111,10 +139,16 @@ endif
 
 LDFLAGS = -z max-page-size=4096
 
-$K/kernel: $(OBJS) $K/kernel.ld $U/initcode
-	$(LD) $(LDFLAGS) -T $K/kernel.ld -o $K/kernel $(OBJS) 
+$K/kernel: $(OBJS) $(OBJS_KCSAN) $K/kernel.ld $U/initcode
+	$(LD) $(LDFLAGS) -T $K/kernel.ld -o $K/kernel $(OBJS) $(OBJS_KCSAN)
 	$(OBJDUMP) -S $K/kernel > $K/kernel.asm
 	$(OBJDUMP) -t $K/kernel | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $K/kernel.sym
+
+$(OBJS): EXTRAFLAG := $(KCSANFLAG)
+
+$K/%.o: $K/%.c
+	$(CC) $(CFLAGS) $(EXTRAFLAG) -c -o $@ $<
+
 
 $U/initcode: $U/initcode.S
 	$(CC) $(CFLAGS) -march=rv64g -nostdinc -I. -Ikernel -c $U/initcode.S -o $U/initcode.o
@@ -178,7 +212,7 @@ UPROGS=\
 
 
 
-ifeq ($(LAB),$(filter $(LAB), 2 7))
+ifeq ($(LAB),7)
 UPROGS += \
 	$U/_stats
 endif
@@ -191,11 +225,7 @@ endif
 
 ifeq ($(LAB),3)
 UPROGS += \
-	$U/_lazytests
-endif
-
-ifeq ($(LAB),3)
-UPROGS += \
+	$U/_lazytests \
 	$U/_cowtest
 endif
 
@@ -208,12 +238,18 @@ $U/uthread_switch.o : $U/uthread_switch.S
 
 $U/_uthread: $U/uthread.o $U/uthread_switch.o $(ULIB)
 	$(LD) $(LDFLAGS) -N -e main -Ttext 0 -o $U/_uthread $U/uthread.o $U/uthread_switch.o $(ULIB)
+	$(OBJDUMP) -S $U/_uthread > $U/uthread.asm
 
 ph: notxv6/ph.c
-	gcc -o ph -g -O2 notxv6/ph.c -pthread
+	gcc -o ph -g -O2 $(XCFLAGS) notxv6/ph.c -pthread
 
 barrier: notxv6/barrier.c
-	gcc -o barrier -g -O2 notxv6/barrier.c -pthread
+	gcc -o barrier -g -O2 $(XCFLAGS) notxv6/barrier.c -pthread
+endif
+
+ifeq ($(LAB),2)
+UPROGS += \
+	$U/_pgtbltest
 endif
 
 ifeq ($(LAB),7)
@@ -251,7 +287,8 @@ clean:
 	$U/initcode $U/initcode.out $K/kernel fs.img \
 	mkfs/mkfs .gdbinit \
         $U/usys.S \
-	$(UPROGS)
+	$(UPROGS) \
+	ph barrier
 
 # try to generate a unique GDB port
 GDBPORT = $(shell expr `id -u` % 5000 + 25000)
@@ -285,8 +322,11 @@ qemu: $K/kernel fs.img
 	sed "s/:1234/:$(GDBPORT)/" < $^ > $@
 
 qemu-gdb: $K/kernel .gdbinit fs.img
-	@echo "*** Now run 'gdb' in another window." 1>&2
+	@echo "*** Now run 'make run-gdb' in another window." 1>&2
 	$(QEMU) $(QEMUOPTS) -S $(QEMUGDB)
+
+run-gdb:
+	$(if $(shell which gdb-multiarch), gdb-multiarch, $(TOOLPREFIX)gdb)
 
 ifeq ($(LAB),6)
 # try to generate a unique port for the echo server
@@ -320,16 +360,9 @@ grade:
 ## FOR web handin
 ##
 
-
-WEBSUB := https://6828.scripts.mit.edu/2020/handin.py
-
-handin: tarball-pref myapi.key
+handin: handin-check
 	@SUF=$(LAB); \
-	curl -f -F file=@lab$$SUF-handin.tar.gz -F key=\<myapi.key $(WEBSUB)/upload \
-	    > /dev/null || { \
-		echo ; \
-		echo Submit seems to have failed.; \
-		echo Please go to $(WEBSUB)/ and upload the tarball manually.; }
+	git tag lab$$SUF-handin HEAD && git push --tags
 
 handin-check:
 	@if ! test -d .git; then \
@@ -353,37 +386,7 @@ handin-check:
 		test "$$r" = y; \
 	fi
 
-UPSTREAM := $(shell git remote -v | grep -m 1 "xv6-labs-2020" | awk '{split($$0,a," "); print a[1]}')
-
 tarball: handin-check
 	git archive --format=tar HEAD | gzip > lab$(LAB)-handin.tar.gz
 
-tarball-pref: handin-check
-	@SUF=$(LAB); \
-	git archive --format=tar HEAD > lab-$$SUF-handin.tar; \
-	git diff $(UPSTREAM)/lab$(LAB) > /tmp/lab$$SUF-diff.patch; \
-	tar -rf lab$$SUF-handin.tar /tmp/lab$$SUF-diff.patch; \
-	gzip -c lab$$SUF-handin.tar > lab$$SUF-handin.tar.gz; \
-	rm lab$$SUF-handin.tar; \
-	rm /tmp/lab$$SUF-diff.patch; \
-
-myapi.key:
-	@echo Get an API key for yourself by visiting $(WEBSUB)/
-	@read -p "Please enter your API key: " k; \
-	if test `echo "$$k" |tr -d '\n' |wc -c` = 32 ; then \
-		TF=`mktemp -t tmp.XXXXXX`; \
-		if test "x$$TF" != "x" ; then \
-			echo "$$k" |tr -d '\n' > $$TF; \
-			mv -f $$TF $@; \
-		else \
-			echo mktemp failed; \
-			false; \
-		fi; \
-	else \
-		echo Bad API key: $$k; \
-		echo An API key should be 32 characters long.; \
-		false; \
-	fi;
-
-
-.PHONY: handin tarball tarball-pref clean grade handin-check
+.PHONY: handin tarball clean grade handin-check
