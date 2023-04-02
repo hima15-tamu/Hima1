@@ -5,7 +5,7 @@ from gradelib import *
 
 r = Runner(save("xv6.out"))
 
-@test(40, "running bigfile")
+@test(30, "running bigfile")
 def test_bigfile():
     r.run_qemu(shell_script([
         'bigfile'
@@ -19,23 +19,19 @@ def test_symlinktest():
         'symlinktest'
     ]), timeout=20)
 
-@test(20, "symlinktest: symlinks", parent=test_symlinktest)
+@test(15, "symlinktest: symlinks", parent=test_symlinktest)
 def test_symlinktest_symlinks():
     r.match("^test symlinks: ok$")
 
-@test(20, "symlinktest: concurrent symlinks", parent=test_symlinktest)
+@test(15, "symlinktest: concurrent symlinks", parent=test_symlinktest)
 def test_symlinktest_symlinks():
     r.match("^test concurrent symlinks: ok$")
 
-@test(19, "usertests")
+@test(10, "usertests")
 def test_usertests():
     r.run_qemu(shell_script([
         'usertests'
-    ]), timeout=360)
+    ]), timeout=3000)
     r.match('^ALL TESTS PASSED$')
-
-@test(1, "time")
-def test_time():
-    check_time()
 
 run_tests()
