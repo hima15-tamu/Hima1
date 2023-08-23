@@ -28,40 +28,7 @@ def test_sleep():
     ]), stop_breakpoint('sys_sleep'))
     r.match('\\$ sleep 10', no=['FAIL'])
 
-@test(10, "find, in current directory")
-def test_find_curdir():
-    fn = random_str()
-    r.run_qemu(shell_script([
-        'echo > %s' % fn,
-        'find . %s' % fn
-    ]))
-    r.match('./%s' % fn)
-
-@test(10, "find, recursive")
-def test_find_recursive():
-    needle = random_str()
-    dirs = [random_str() for _ in range(3)]
-    r.run_qemu(shell_script([
-        'mkdir %s' % dirs[0],
-        'echo > %s/%s' % (dirs[0], needle),
-        'mkdir %s/%s' % (dirs[0], dirs[1]),
-        'echo > %s/%s/%s' % (dirs[0], dirs[1], needle),
-        'mkdir %s' % dirs[2],
-        'echo > %s/%s' % (dirs[2], needle),
-        'find . %s' % needle
-    ]))
-    r.match('./%s/%s' % (dirs[0], needle),
-            './%s/%s/%s' % (dirs[0], dirs[1], needle),
-            './%s/%s' % (dirs[2], needle))
-
-@test(20, "pingpong")
-def test_pingpong():
-    r.run_qemu(shell_script([
-        'pingpong', 'echo OK'
-    ]))
-    r.match('^\\d+: received ping$', '^\\d+: received pong$', '^OK$')
-
-@test(5, "trace 32 grep")
+@test(10, "trace 32 grep")
 def test_trace_32_grep():
     r.run_qemu(shell_script([
         'trace 32 grep hello README'
@@ -71,7 +38,7 @@ def test_trace_32_grep():
     r.match('^\\d+: syscall read -> 321')
     r.match('^\\d+: syscall read -> 0')
 
-@test(5, "trace all grep")
+@test(10, "trace all grep")
 def test_trace_all_grep():
     r.run_qemu(shell_script([
         'trace 2147483647 grep hello README'
@@ -92,7 +59,7 @@ def test_trace_nothing():
     ]))
     r.match(no=[".* syscall .*"])
 
-@test(5, "trace children")
+@test(10, "trace children")
 def test_trace_children():
     r.run_qemu(shell_script([
         'trace 2 usertests forkforkfork'
@@ -103,11 +70,22 @@ def test_trace_children():
     r.match('^\\d+: syscall fork -> -1')
     r.match('^ALL TESTS PASSED')
 
-@test(20, "sysinfotest")
-def test_sysinfotest():
+@test(0, "running alarmtest")
+def test_alarmtest():
     r.run_qemu(shell_script([
-        'sysinfotest'
+        'alarmtest'
     ]))
-    r.match('^sysinfotest: OK', no=[".* FAIL .*"])
+
+@test(15, "alarmtest: test0", parent=test_alarmtest)
+def test_alarmtest_test0():
+    r.match('^test0 passed$')
+
+@test(20, "alarmtest: test1", parent=test_alarmtest)
+def test_alarmtest_test1():
+    r.match('^\\.?test1 passed$')
+
+@test(10, "alarmtest: test2", parent=test_alarmtest)
+def test_alarmtest_test2():
+    r.match('^\\.?test2 passed$')
 
 run_tests()

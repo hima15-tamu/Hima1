@@ -258,7 +258,6 @@ def check_time():
     except IOError:
         raise AssertionError('Cannot read time.txt')
 
-
 ##################################################################
 # Controllers
 #

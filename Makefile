@@ -10,12 +10,7 @@ U=user
 
 OBJS = \
   $K/entry.o \
-  $K/start.o \
-  $K/console.o \
-  $K/printf.o \
-  $K/uart.o \
   $K/kalloc.o \
-  $K/spinlock.o \
   $K/string.o \
   $K/main.o \
   $K/vm.o \
@@ -37,8 +32,52 @@ OBJS = \
   $K/plic.o \
   $K/virtio_disk.o \
 
-ifeq ($(LAB),pgtbl)
-OBJS += $K/vmcopyin.o
+ifeq ($(LAB),2)
+OBJS += \
+	$K/vmcopyin.o
+endif
+
+ifeq ($(LAB),$(filter $(LAB), 2 7))
+OBJS += \
+	$K/stats.o\
+	$K/sprintf.o
+endif
+
+
+ifeq ($(LAB),6)
+OBJS += \
+	$K/e1000.o \
+	$K/net.o \
+	$K/sysnet.o \
+	$K/pci.o
+endif
+
+
+OBJS_KCSAN = \
+  $K/start.o \
+  $K/console.o \
+  $K/printf.o \
+  $K/uart.o \
+  $K/spinlock.o
+
+ifdef KCSAN
+OBJS_KCSAN += \
+	$K/kcsan.o
+endif
+
+ifeq ($(LAB),7)
+OBJS += \
+	$K/stats.o\
+	$K/sprintf.o
+endif
+
+
+ifeq ($(LAB),6)
+OBJS += \
+	$K/e1000.o \
+	$K/net.o \
+	$K/sysnet.o \
+	$K/pci.o
 endif
 
 # riscv64-unknown-elf- or riscv64-linux-gnu-
@@ -70,15 +109,24 @@ OBJDUMP = $(TOOLPREFIX)objdump
 CFLAGS = -Wall -Werror -O -fno-omit-frame-pointer -ggdb -gdwarf-2
 
 ifdef LAB
-LABUPPER = $(shell echo $(LAB) | tr a-z A-Z)
-CFLAGS += -DSOL_$(LABUPPER)
+XCFLAGS += -DSOL_$(LAB) -DLAB_$(LAB)
 endif
 
+CFLAGS += $(XCFLAGS)
 CFLAGS += -MD
 CFLAGS += -mcmodel=medany
 CFLAGS += -ffreestanding -fno-common -nostdlib -mno-relax
 CFLAGS += -I.
 CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
+
+ifeq ($(LAB),6)
+CFLAGS += -DNET_TESTS_PORT=$(SERVERPORT)
+endif
+
+ifdef KCSAN
+CFLAGS += -DKCSAN
+KCSANFLAG = -fsanitize=thread
+endif
 
 # Disable PIE when possible (for Ubuntu 16.10 toolchain)
 ifneq ($(shell $(CC) -dumpspecs 2>/dev/null | grep -e '[^f]no-pie'),)
@@ -90,10 +138,16 @@ endif
 
 LDFLAGS = -z max-page-size=4096
 
-$K/kernel: $(OBJS) $K/kernel.ld $U/initcode
-	$(LD) $(LDFLAGS) -T $K/kernel.ld -o $K/kernel $(OBJS) 
+$K/kernel: $(OBJS) $(OBJS_KCSAN) $K/kernel.ld $U/initcode
+	$(LD) $(LDFLAGS) -T $K/kernel.ld -o $K/kernel $(OBJS) $(OBJS_KCSAN)
 	$(OBJDUMP) -S $K/kernel > $K/kernel.asm
 	$(OBJDUMP) -t $K/kernel | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $K/kernel.sym
+
+$(OBJS): EXTRAFLAG := $(KCSANFLAG)
+
+$K/%.o: $K/%.c
+	$(CC) $(CFLAGS) $(EXTRAFLAG) -c -o $@ $<
+
 
 $U/initcode: $U/initcode.S
 	$(CC) $(CFLAGS) -march=rv64g -nostdinc -I. -Ikernel -c $U/initcode.S -o $U/initcode.o
@@ -105,6 +159,10 @@ tags: $(OBJS) _init
 	etags *.S *.c
 
 ULIB = $U/ulib.o $U/usys.o $U/printf.o $U/umalloc.o
+
+ifeq ($(LAB),$(filter $(LAB), 2 7))
+ULIB += $U/statistics.o
+endif
 
 _%: %.o $(ULIB)
 	$(LD) $(LDFLAGS) -T $U/user.ld -o $@ $^
@@ -124,7 +182,7 @@ $U/_forktest: $U/forktest.o $(ULIB)
 	$(OBJDUMP) -S $U/_forktest > $U/forktest.asm
 
 mkfs/mkfs: mkfs/mkfs.c $K/fs.h $K/param.h
-	gcc -Werror -Wall -I. -o mkfs/mkfs mkfs/mkfs.c
+	gcc $(XCFLAGS) -Werror -Wall -I. -o mkfs/mkfs mkfs/mkfs.c
 
 # Prevent deletion of intermediate files, e.g. cat.o, after first build, so
 # that disk image changes after first build are persistent until clean.  More
@@ -152,26 +210,49 @@ UPROGS=\
 
 
 
-ifeq ($(LAB),trap)
+ifeq ($(LAB),7)
+UPROGS += \
+	$U/_stats
+endif
+
+ifeq ($(LAB),4)
 UPROGS += \
 	$U/_call\
-	$U/_alarmtest
+	$U/_bttest
 endif
 
-ifeq ($(LAB),lazy)
+ifeq ($(LAB),3)
 UPROGS += \
-	$U/_lazytests
-endif
-
-ifeq ($(LAB),cow)
-UPROGS += \
+	$U/_lazytests \
 	$U/_cowtest
 endif
 
+ifeq ($(LAB),2)
+UPROGS += \
+	$U/_pgtbltest
+endif
+
+ifeq ($(LAB),7)
+UPROGS += \
+	$U/_kalloctest\
+	$U/_bcachetest
+endif
+
+ifeq ($(LAB),5)
+UPROGS += \
+	$U/_bigfile
+endif
+
+ifeq ($(LAB),6)
+UPROGS += \
+	$U/_nettests
+endif
+
 UEXTRA=
-ifeq ($(LAB),util)
+ifeq ($(LAB),1)
 	UEXTRA += user/xargstest.sh
 endif
+
 
 fs.img: mkfs/mkfs README $(UEXTRA) $(UPROGS)
 	mkfs/mkfs fs.img README $(UEXTRA) $(UPROGS)
@@ -184,7 +265,8 @@ clean:
 	$U/initcode $U/initcode.out $K/kernel fs.img \
 	mkfs/mkfs .gdbinit \
         $U/usys.S \
-	$(UPROGS)
+	$(UPROGS) \
+	ph barrier
 
 # try to generate a unique GDB port
 GDBPORT = $(shell expr `id -u` % 5000 + 25000)
@@ -195,11 +277,21 @@ QEMUGDB = $(shell if $(QEMU) -help | grep -q '^-gdb'; \
 ifndef CPUS
 CPUS := 3
 endif
+ifeq ($(LAB),5)
+CPUS := 1
+endif
+
+FWDPORT = $(shell expr `id -u` % 5000 + 25999)
 
 QEMUOPTS = -machine virt -bios none -kernel $K/kernel -m 128M -smp $(CPUS) -nographic
 QEMUOPTS += -global virtio-mmio.force-legacy=false
 QEMUOPTS += -drive file=fs.img,if=none,format=raw,id=x0
 QEMUOPTS += -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0
+
+ifeq ($(LAB),6)
+QEMUOPTS += -netdev user,id=net0,hostfwd=udp::$(FWDPORT)-:2000 -object filter-dump,id=net0,netdev=net0,file=packets.pcap
+QEMUOPTS += -device e1000,netdev=net0,bus=pcie.0
+endif
 
 qemu: $K/kernel fs.img
 	$(QEMU) $(QEMUOPTS)
@@ -212,10 +304,17 @@ qemu-gdb: $K/kernel .gdbinit fs.img
 	$(QEMU) $(QEMUOPTS) -S $(QEMUGDB)
 
 run-gdb:
-ifeq (, $(shell which gdb-multiarch))
-	$(TOOLPREFIX)gdb
-else
-	gdb-multiarch
+	$(if $(shell which gdb-multiarch), gdb-multiarch, $(TOOLPREFIX)gdb)
+
+ifeq ($(LAB),6)
+# try to generate a unique port for the echo server
+SERVERPORT = $(shell expr `id -u` % 5000 + 25099)
+
+server:
+	python3 server.py $(SERVERPORT)
+
+ping:
+	python3 ping.py $(FWDPORT)
 endif
 
 ##
@@ -268,4 +367,4 @@ handin-check:
 tarball: handin-check
 	git archive --format=tar HEAD | gzip > lab$(LAB)-handin.tar.gz
 
-.PHONY: handin tarball tarball-pref clean grade handin-check
+.PHONY: handin tarball clean grade handin-check
