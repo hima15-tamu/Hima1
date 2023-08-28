@@ -338,13 +338,9 @@ grade:
 ## FOR web handin
 ##
 
-handin: handin-check
-	@SUF=$(LAB); \
-	git tag lab$$SUF-handin HEAD && git push --tags
-
 handin-check:
 	@if ! test -d .git; then \
-		echo No .git directory, is this a git repository?; \
+		echo "No .git directory, is this a git repository?"; \
 		false; \
 	fi
 	@if test "$$(git symbolic-ref HEAD)" != refs/heads/lab$(LAB); then \
@@ -363,8 +359,15 @@ handin-check:
 		read -p "Untracked files will not be handed in.  Continue? [y/N] " r; \
 		test "$$r" = y; \
 	fi
+	@if ! git ls-files --error-unmatch repo.txt; then \
+		echo "No repo.txt. Please add and specify the name of your repository in repo.txt. Don't forget to git add and commit the change"; \
+		false; \
+	fi
 
 tarball: handin-check
-	git archive --format=tar HEAD | gzip > lab$(LAB)-handin.tar.gz
+	git archive --format=zip HEAD | gzip > lab$(LAB)-handin.zip
+
+handin: tarball
+	@echo "Please upload lab$(LAB)-handin.zip to Gradescope"
 
 .PHONY: handin tarball clean grade handin-check
