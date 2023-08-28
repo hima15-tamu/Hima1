@@ -365,7 +365,7 @@ handin-check:
 	fi
 
 tarball: handin-check
-	git archive --format=zip HEAD | gzip > lab$(LAB)-handin.zip
+	git archive --format=zip HEAD -o lab$(LAB)-handin.zip
 
 handin: tarball
 	@echo "Please upload lab$(LAB)-handin.zip to Gradescope"
