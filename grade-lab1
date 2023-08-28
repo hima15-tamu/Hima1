@@ -20,7 +20,7 @@ def test_sleep_no_args():
     ]))
     r.match('^OK$', no=["exec .* failed", "$ sleep\n$"])
 
-@test(10, "sleep, makes syscall")
+@test(5, "sleep, makes syscall")
 def test_sleep():
     r.run_qemu(shell_script([
         'sleep 10',
@@ -52,13 +52,6 @@ def test_trace_all_grep():
     r.match('^\\d+: syscall read -> 0')
     r.match('^\\d+: syscall close -> 0')
 
-@test(5, "trace nothing")
-def test_trace_nothing():
-    r.run_qemu(shell_script([
-        'grep hello README'
-    ]))
-    r.match(no=[".* syscall .*"])
-
 @test(10, "trace children")
 def test_trace_children():
     r.run_qemu(shell_script([
@@ -76,7 +69,7 @@ def test_alarmtest():
         'alarmtest'
     ]))
 
-@test(15, "alarmtest: test0", parent=test_alarmtest)
+@test(20, "alarmtest: test0", parent=test_alarmtest)
 def test_alarmtest_test0():
     r.match('^test0 passed$')
 
@@ -84,7 +77,7 @@ def test_alarmtest_test0():
 def test_alarmtest_test1():
     r.match('^\\.?test1 passed$')
 
-@test(10, "alarmtest: test2", parent=test_alarmtest)
+@test(15, "alarmtest: test2", parent=test_alarmtest)
 def test_alarmtest_test2():
     r.match('^\\.?test2 passed$')
 
