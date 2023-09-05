@@ -5,40 +5,6 @@ from gradelib import *
 
 r = Runner(save("xv6.out"))
 
-@test(0, "running lazytests")
-def test_lazytests():
-    r.run_qemu(shell_script([
-        'lazytests'
-    ]))
-
-@test(20, "lazy: map", parent=test_lazytests)
-def test_filetest():
-    r.match("^test lazy unmap: OK$")
-
-@test(20, "lazy: unmap", parent=test_lazytests)
-def test_memtest():
-    r.match("test lazy alloc: OK$")
-
-@test(0, "usertests")
-def test_usertests():
-    r.run_qemu(shell_script([
-        'usertests'
-    ]), timeout=300)
-
-def usertest_check(testcase, nextcase, output):
-    if not re.search(r'\ntest {}: [\s\S]*OK\ntest {}'.format(testcase, nextcase), output):
-        raise AssertionError('Failed ' + testcase)
-
-@test(20, "usertests: all tests", parent=test_usertests)
-def test_usertests_all():
-    r.match('^ALL TESTS PASSED$')
-
-@test(0, "usertests")
-def test_usertests():
-    r.run_qemu(shell_script([
-        'usertests'
-    ]), timeout=300)
-
 @test(0, "running cowtest")
 def test_cowtest():
     r.run_qemu(shell_script([
@@ -58,5 +24,23 @@ def test_three():
 @test(10, "file", parent=test_cowtest)
 def test_file():
     r.match('^file: ok$')
+
+@test(0, "running threadtest")
+def test_threadtest():
+    r.run_qemu(shell_script([
+        'threadtest'
+    ]))
+
+@test(20, "threadtest: testthreadrun", parent=test_threadtest)
+def test_threadtest_testthreadrun():
+    r.match('^testthreadrun passed$')
+
+@test(20, "threadtest: testthreadmore", parent=test_threadtest)
+def test_threadtest_testthreadmore():
+    r.match('^\\.?testthreadmore passed$')
+
+@test(15, "threadtest: testthreadsbrk", parent=test_threadtest)
+def test_threadtest_testthreadsbrk():
+    r.match('^\\.?testthreadsbrk passed$')
 
 run_tests()
