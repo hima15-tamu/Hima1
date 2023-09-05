@@ -65,14 +65,14 @@ OBJS_KCSAN += \
 	$K/kcsan.o
 endif
 
-ifeq ($(LAB),$(filter $(LAB), lock))
+ifeq ($(LAB),7)
 OBJS += \
 	$K/stats.o\
 	$K/sprintf.o
 endif
 
 
-ifeq ($(LAB),net)
+ifeq ($(LAB),6)
 OBJS += \
 	$K/e1000.o \
 	$K/net.o \

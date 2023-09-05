@@ -48,13 +48,19 @@ def test_pgtbltest():
         'pgtbltest'
     ]), timeout=300)
 
-@test(20, "pgtbltest: ugetpid", parent=test_pgtbltest)
-def test_nettest_():
-    r.match('^ugetpid_test: OK$')
+@test(0, "running lazytests")
+def test_lazytests():
+    r.run_qemu(shell_script([
+        'lazytests'
+    ]))
 
-@test(30, "pgtbltest: pgaccess", parent=test_pgtbltest)
-def test_nettest_():
-    r.match('^pgaccess_test: OK$')
+@test(15, "lazy: map", parent=test_lazytests)
+def test_filetest():
+    r.match("^test lazy unmap: OK$")
+
+@test(15, "lazy: unmap", parent=test_lazytests)
+def test_memtest():
+    r.match("test lazy alloc: OK$")
 
 @test(30, "pgtbltest: hugepage", parent=test_pgtbltest)
 def test_nettest_():
@@ -76,5 +82,25 @@ def test_nettest_():
                               str(n_page_after + 512),
                               str(n_page_after + 513)))
     assert_equal(n_hugepage_before + 1, n_hugepage_after)
+
+@test(0, "usertests")
+def test_usertests():
+    r.run_qemu(shell_script([
+        'usertests'
+    ]), timeout=300)
+
+def usertest_check(testcase, nextcase, output):
+    if not re.search(r'\ntest {}: [\s\S]*OK\ntest {}'.format(testcase, nextcase), output):
+        raise AssertionError('Failed ' + testcase)
+
+@test(20, "usertests: all tests", parent=test_usertests)
+def test_usertests_all():
+    r.match('^ALL TESTS PASSED$')
+
+@test(0, "usertests")
+def test_usertests():
+    r.run_qemu(shell_script([
+        'usertests'
+    ]), timeout=300)
 
 run_tests()
