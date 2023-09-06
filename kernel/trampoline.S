@@ -16,10 +16,12 @@
 .section trampsec
 .globl trampoline
 trampoline:
+
+.irp param, 0
 .align 4
-.globl uservec
-uservec:    
-	#
+.globl uservec_\param
+uservec_\param:
+        #
         # trap.c sets stvec to point here, so
         # traps from user space start here,
         # in supervisor mode, but with a
@@ -33,8 +35,13 @@ uservec:
         # each process has a separate p->trapframe memory area,
         # but it's mapped to the same virtual address
         # (TRAPFRAME) in every process's user page table.
-        li a0, TRAPFRAME
-        
+        li a0, TRAPFRAME + PGSIZE * \param
+
+        # now jump to save registers
+        j save_regs
+.endr
+
+save_regs:
         # save the user registers in TRAPFRAME
         sd ra, 40(a0)
         sd sp, 48(a0)
@@ -102,14 +109,13 @@ userret:
         # userret(pagetable)
         # called by usertrapret() in trap.c to
         # switch from kernel to user.
-        # a0: user page table, for satp.
+        # a0: trapframe
+        # a1: user page table, for satp.
 
         # switch to the user page table.
         sfence.vma zero, zero
-        csrw satp, a0
+        csrw satp, a1
         sfence.vma zero, zero
-
-        li a0, TRAPFRAME
 
         # restore all but a0 from TRAPFRAME
         ld ra, 40(a0)

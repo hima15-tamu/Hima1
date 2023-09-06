@@ -1,3 +1,5 @@
+#include "param.h"
+
 // Physical memory layout
 
 // qemu -machine virt is set up like this,
@@ -62,6 +64,11 @@
 //   fixed-size stack
 //   expandable heap
 //   ...
-//   TRAPFRAME (p->trapframe, used by the trampoline)
-//   TRAMPOLINE (the same page as in the kernel)
-#define TRAPFRAME (TRAMPOLINE - PGSIZE)
+//   TRAMPOLINE (the same page as in the kernel) for thread 0
+//   TRAMPOLINE for thread 1
+//   ...
+//   TRAPFRAME for thread 0
+//   TRAPFRAME for thread 1
+//   ...
+
+#define TRAPFRAME (TRAMPOLINE - PGSIZE*NTHREAD)

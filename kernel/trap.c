@@ -9,7 +9,7 @@
 struct spinlock tickslock;
 uint ticks;
 
-extern char trampoline[], uservec[], userret[];
+extern char trampoline[], uservec_0[], userret[];
 
 // in kernelvec.S, calls kerneltrap().
 void kernelvec();
@@ -97,7 +97,7 @@ usertrapret(void)
   intr_off();
 
   // send syscalls, interrupts, and exceptions to uservec in trampoline.S
-  uint64 trampoline_uservec = TRAMPOLINE + (uservec - trampoline);
+  uint64 trampoline_uservec = TRAMPOLINE + (uservec_0 - trampoline);
   w_stvec(trampoline_uservec);
 
   // set up trapframe values that uservec will need when
@@ -126,7 +126,7 @@ usertrapret(void)
   // switches to the user page table, restores user registers,
   // and switches to user mode with sret.
   uint64 trampoline_userret = TRAMPOLINE + (userret - trampoline);
-  ((void (*)(uint64))trampoline_userret)(satp);
+  ((void (*)(uint64, uint64))trampoline_userret)(TRAPFRAME, satp);
 }
 
 // interrupts and exceptions from kernel code go here via kernelvec,
