@@ -217,21 +217,15 @@ UPROGS += \
 	$U/_stats
 endif
 
-ifeq ($(LAB),4)
+ifeq ($(LAB),2)
 UPROGS += \
-	$U/_call\
-	$U/_bttest
+	$U/_pgtbltest \
+	$U/_lazytests
 endif
 
 ifeq ($(LAB),3)
 UPROGS += \
-	$U/_lazytests \
 	$U/_cowtest
-endif
-
-ifeq ($(LAB),2)
-UPROGS += \
-	$U/_pgtbltest
 endif
 
 ifeq ($(LAB),7)
@@ -240,7 +234,7 @@ UPROGS += \
 	$U/_bcachetest
 endif
 
-ifeq ($(LAB),5)
+ifeq ($(LAB),4)
 UPROGS += \
 	$U/_bigfile
 endif
@@ -279,7 +273,7 @@ QEMUGDB = $(shell if $(QEMU) -help | grep -q '^-gdb'; \
 ifndef CPUS
 CPUS := 3
 endif
-ifeq ($(LAB),5)
+ifeq ($(LAB),4)
 CPUS := 1
 endif
 
