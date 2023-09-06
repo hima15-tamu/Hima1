@@ -217,15 +217,8 @@ UPROGS += \
 	$U/_stats
 endif
 
-ifeq ($(LAB),4)
-UPROGS += \
-	$U/_call\
-	$U/_bttest
-endif
-
 ifeq ($(LAB),3)
 UPROGS += \
-	$U/_lazytests \
 	$U/_cowtest
 endif
 
