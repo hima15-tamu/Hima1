@@ -62,6 +62,20 @@ def test_filetest():
 def test_memtest():
     r.match("test lazy alloc: OK$")
 
+@test(0, "usertests")
+def test_usertests():
+    r.run_qemu(shell_script([
+        'usertests'
+    ]), timeout=300)
+
+def usertest_check(testcase, nextcase, output):
+    if not re.search(r'\ntest {}: [\s\S]*OK\ntest {}'.format(testcase, nextcase), output):
+        raise AssertionError('Failed ' + testcase)
+
+@test(20, "usertests: all tests", parent=test_usertests)
+def test_usertests_all():
+    r.match('^ALL TESTS PASSED$')
+
 @test(30, "pgtbltest: hugepage", parent=test_pgtbltest)
 def test_nettest_():
     r.match('^count = 2$')
@@ -82,25 +96,5 @@ def test_nettest_():
                               str(n_page_after + 512),
                               str(n_page_after + 513)))
     assert_equal(n_hugepage_before + 1, n_hugepage_after)
-
-@test(0, "usertests")
-def test_usertests():
-    r.run_qemu(shell_script([
-        'usertests'
-    ]), timeout=300)
-
-def usertest_check(testcase, nextcase, output):
-    if not re.search(r'\ntest {}: [\s\S]*OK\ntest {}'.format(testcase, nextcase), output):
-        raise AssertionError('Failed ' + testcase)
-
-@test(20, "usertests: all tests", parent=test_usertests)
-def test_usertests_all():
-    r.match('^ALL TESTS PASSED$')
-
-@test(0, "usertests")
-def test_usertests():
-    r.run_qemu(shell_script([
-        'usertests'
-    ]), timeout=300)
 
 run_tests()
