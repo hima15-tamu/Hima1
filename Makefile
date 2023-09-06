@@ -249,7 +249,8 @@ endif
 
 ifeq ($(LAB),2)
 UPROGS += \
-	$U/_pgtbltest
+	$U/_pgtbltest \
+	$U/_lazytests
 endif
 
 ifeq ($(LAB),7)
@@ -262,8 +263,6 @@ ifeq ($(LAB),5)
 UPROGS += \
 	$U/_bigfile
 endif
-
-
 
 ifeq ($(LAB),6)
 UPROGS += \
