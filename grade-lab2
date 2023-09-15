@@ -42,23 +42,17 @@ def test_pteprint():
             pa = (int(matches[0][0], 16) >> 10) << 12
             assert_equal(int(matches[0][1], 16), pa)
 
-@test(0, "pgtbltest")
-def test_pgtbltest():
-    r.run_qemu(shell_script([
-        'pgtbltest'
-    ]), timeout=300)
-
 @test(0, "running lazytests")
 def test_lazytests():
     r.run_qemu(shell_script([
         'lazytests'
     ]))
 
-@test(15, "lazy: map", parent=test_lazytests)
+@test(25, "lazy: map", parent=test_lazytests)
 def test_filetest():
     r.match("^test lazy unmap: OK$")
 
-@test(15, "lazy: unmap", parent=test_lazytests)
+@test(25, "lazy: unmap", parent=test_lazytests)
 def test_memtest():
     r.match("test lazy alloc: OK$")
 
@@ -72,7 +66,7 @@ def usertest_check(testcase, nextcase, output):
     if not re.search(r'\ntest {}: [\s\S]*OK\ntest {}'.format(testcase, nextcase), output):
         raise AssertionError('Failed ' + testcase)
 
-@test(20, "usertests: all tests", parent=test_usertests)
+@test(30, "usertests: all tests", parent=test_usertests)
 def test_usertests_all():
     r.match('^ALL TESTS PASSED$')
 
