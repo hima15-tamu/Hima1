@@ -70,6 +70,12 @@ def usertest_check(testcase, nextcase, output):
 def test_usertests_all():
     r.match('^ALL TESTS PASSED$')
 
+@test(0, "pgtbltest")
+def test_pgtbltest():
+    r.run_qemu(shell_script([
+        'pgtbltest'
+    ]), timeout=300)
+
 @test(30, "pgtbltest: hugepage", parent=test_pgtbltest)
 def test_nettest_():
     r.match('^count = 2$')

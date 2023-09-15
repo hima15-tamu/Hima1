@@ -80,7 +80,6 @@ OBJS += \
 	$K/pci.o
 endif
 
-
 # riscv64-unknown-elf- or riscv64-linux-gnu-
 # perhaps in /opt/riscv/bin
 #TOOLPREFIX = 
@@ -211,7 +210,6 @@ UPROGS=\
 
 
 
-
 ifeq ($(LAB),7)
 UPROGS += \
 	$U/_stats
@@ -225,32 +223,13 @@ endif
 
 ifeq ($(LAB),3)
 UPROGS += \
-	$U/_lazytests \
 	$U/_cowtest
-endif
-
-ifeq ($(LAB),7)
-UPROGS += \
-	$U/_uthread
-
-$U/uthread_switch.o : $U/uthread_switch.S
-	$(CC) $(CFLAGS) -c -o $U/uthread_switch.o $U/uthread_switch.S
-
-$U/_uthread: $U/uthread.o $U/uthread_switch.o $(ULIB)
-	$(LD) $(LDFLAGS) -N -e main -Ttext 0 -o $U/_uthread $U/uthread.o $U/uthread_switch.o $(ULIB)
-	$(OBJDUMP) -S $U/_uthread > $U/uthread.asm
-
-ph: notxv6/ph.c
-	gcc -o ph -g -O2 $(XCFLAGS) notxv6/ph.c -pthread
-
-barrier: notxv6/barrier.c
-	gcc -o barrier -g -O2 $(XCFLAGS) notxv6/barrier.c -pthread
 endif
 
 ifeq ($(LAB),2)
 UPROGS += \
-	$U/_pgtbltest \
-	$U/_lazytests
+	$U/_lazytests \
+	$U/_pgtbltest
 endif
 
 ifeq ($(LAB),7)
@@ -353,19 +332,15 @@ grade:
 	@echo $(MAKE) clean
 	@$(MAKE) clean || \
           (echo "'make clean' failed.  HINT: Do you have another running instance of xv6?" && exit 1)
-	python3 grade-lab$(LAB) $(GRADEFLAGS)
+	./grade-lab$(LAB) $(GRADEFLAGS)
 
 ##
 ## FOR web handin
 ##
 
-handin: handin-check
-	@SUF=$(LAB); \
-	git tag lab$$SUF-handin HEAD && git push --tags
-
 handin-check:
 	@if ! test -d .git; then \
-		echo No .git directory, is this a git repository?; \
+		echo "No .git directory, is this a git repository?"; \
 		false; \
 	fi
 	@if test "$$(git symbolic-ref HEAD)" != refs/heads/lab$(LAB); then \
@@ -384,8 +359,15 @@ handin-check:
 		read -p "Untracked files will not be handed in.  Continue? [y/N] " r; \
 		test "$$r" = y; \
 	fi
+	@if ! git ls-files --error-unmatch repo.txt; then \
+		echo "No repo.txt. Please add and specify the name of your repository in repo.txt. Don't forget to git add and commit the change"; \
+		false; \
+	fi
 
 tarball: handin-check
-	git archive --format=tar HEAD | gzip > lab$(LAB)-handin.tar.gz
+	git archive --format=zip HEAD -o lab$(LAB)-handin.zip
+
+handin: tarball
+	@echo "Please upload lab$(LAB)-handin.zip to Gradescope"
 
 .PHONY: handin tarball clean grade handin-check
