@@ -32,12 +32,12 @@ OBJS = \
   $K/plic.o \
   $K/virtio_disk.o \
 
-ifeq ($(LAB),2)
+ifeq ($(LAB),$(filter $(LAB), 2 3))
 OBJS += \
 	$K/vmcopyin.o
 endif
 
-ifeq ($(LAB),$(filter $(LAB), 2 7))
+ifeq ($(LAB),$(filter $(LAB), 2 3 7))
 OBJS += \
 	$K/stats.o\
 	$K/sprintf.o
@@ -79,7 +79,6 @@ OBJS += \
 	$K/sysnet.o \
 	$K/pci.o
 endif
-
 
 # riscv64-unknown-elf- or riscv64-linux-gnu-
 # perhaps in /opt/riscv/bin
@@ -211,7 +210,6 @@ UPROGS=\
 
 
 
-
 ifeq ($(LAB),7)
 UPROGS += \
 	$U/_stats
@@ -240,6 +238,11 @@ barrier: notxv6/barrier.c
 	gcc -o barrier -g -O2 $(XCFLAGS) notxv6/barrier.c -pthread
 endif
 
+ifeq ($(LAB),$(filter $(LAB), 2 7))
+UPROGS += \
+	$U/_lazytests
+endif
+
 ifeq ($(LAB),2)
 UPROGS += \
 	$U/_pgtbltest
@@ -255,8 +258,6 @@ ifeq ($(LAB),5)
 UPROGS += \
 	$U/_bigfile
 endif
-
-
 
 ifeq ($(LAB),6)
 UPROGS += \
