@@ -25,6 +25,21 @@ def test_three():
 def test_file():
     r.match('^file: ok$')
 
+@test(0, "running lazytests", parent=test_cowtest)
+def test_lazytests():
+    assert_ok([test_cowtest, test_simple, test_three, test_file])
+    r.run_qemu(shell_script([
+        'lazytests'
+    ]))
+
+@test(10, "lazy: map", parent=test_lazytests)
+def test_filetest():
+    r.match("^test lazy unmap: OK$")
+
+@test(10, "lazy: unmap", parent=test_lazytests)
+def test_memtest():
+    r.match("test lazy alloc: OK$")
+
 @test(0, "running threadtest")
 def test_threadtest():
     r.run_qemu(shell_script([

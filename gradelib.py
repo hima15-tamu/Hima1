@@ -135,7 +135,14 @@ def get_current_test():
 # Assertions
 #
 
-__all__ += ["assert_equal", "assert_lines_match"]
+__all__ += ["assert_ok", "assert_equal", "assert_lines_match"]
+
+def assert_ok(test):
+    if not isinstance(test, list):
+        test = [test]
+    for t in test:
+        if not t.ok:
+            raise AssertionError("Must pass \"Test %s\" first" % (t.title))
 
 def assert_equal(got, expect, msg=""):
     if got == expect:
