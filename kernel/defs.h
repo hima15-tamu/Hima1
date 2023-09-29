@@ -8,6 +8,10 @@ struct spinlock;
 struct sleeplock;
 struct stat;
 struct superblock;
+#ifdef LAB_6
+struct mbuf;
+struct sock;
+#endif
 
 // bio.c
 void            binit(void);
@@ -62,6 +66,8 @@ void            ramdiskrw(struct buf*);
 // kalloc.c
 void*           kalloc(void);
 void            kfree(void *);
+void*           kalloc_huge(void);
+void            kfree_huge(void *);
 void            kinit(void);
 
 // log.c
@@ -164,11 +170,14 @@ pagetable_t     uvmcreate(void);
 void            uvmfirst(pagetable_t, uchar *, uint);
 uint64          uvmalloc(pagetable_t, uint64, uint64, int);
 uint64          uvmdealloc(pagetable_t, uint64, uint64);
+#ifdef SOL_COW
+#else
 int             uvmcopy(pagetable_t, pagetable_t, uint64);
+#endif
 void            uvmfree(pagetable_t, uint64);
 void            uvmunmap(pagetable_t, uint64, uint64, int);
 void            uvmclear(pagetable_t, uint64);
-pte_t *         walk(pagetable_t, uint64, int);
+pte_t *         walk(pagetable_t, uint64, int, int);
 uint64          walkaddr(pagetable_t, uint64);
 int             copyout(pagetable_t, uint64, char *, uint64);
 int             copyin(pagetable_t, char *, uint64, uint64);
@@ -191,8 +200,6 @@ void            virtio_disk_intr(void);
 
 
 // stats.c
-void            statsinit(void);
-void            statsinc(void);
 void            statsinit(void);
 void            statsinc(void);
 

@@ -1,7 +1,7 @@
 #include "types.h"
 #include "riscv.h"
-#include "defs.h"
 #include "param.h"
+#include "defs.h"
 #include "memlayout.h"
 #include "spinlock.h"
 #include "proc.h"
@@ -54,6 +54,7 @@ sys_sleep(void)
   int n;
   uint ticks0;
 
+
   argint(0, &n);
   acquire(&tickslock);
   ticks0 = ticks;
@@ -67,6 +68,28 @@ sys_sleep(void)
   release(&tickslock);
   return 0;
 }
+
+
+#ifdef LAB_2
+int
+sys_pgaccess(void)
+{
+  // lab 2: your code here.
+  return 0;
+}
+
+int
+sys_mkhugepg(void)
+{
+  uint64 addr;
+
+  argaddr(0, &addr);
+
+  // lab 2: your code here.
+
+  return 0;
+}
+#endif
 
 uint64
 sys_kill(void)

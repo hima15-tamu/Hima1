@@ -102,6 +102,14 @@ extern uint64 sys_link(void);
 extern uint64 sys_mkdir(void);
 extern uint64 sys_close(void);
 
+#ifdef LAB_6
+extern uint64 sys_connect(void);
+#endif
+#ifdef LAB_2
+extern uint64 sys_pgaccess(void);
+extern uint64 sys_mkhugepg(void);
+#endif
+
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.
 static uint64 (*syscalls[])(void) = {
@@ -126,7 +134,16 @@ static uint64 (*syscalls[])(void) = {
 [SYS_link]    sys_link,
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
+#ifdef LAB_6
+[SYS_connect] sys_connect,
+#endif
+#ifdef LAB_2
+[SYS_pgaccess] sys_pgaccess,
+[SYS_mkhugepg] sys_mkhugepg,
+#endif
 };
+
+
 
 void
 syscall(void)

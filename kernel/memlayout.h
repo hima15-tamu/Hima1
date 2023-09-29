@@ -27,6 +27,10 @@
 #define VIRTIO0 0x10001000
 #define VIRTIO0_IRQ 1
 
+#ifdef LAB_6
+#define E1000_IRQ 33
+#endif
+
 // core local interruptor (CLINT), which contains the timer.
 #define CLINT 0x2000000L
 #define CLINT_MTIMECMP(hartid) (CLINT + 0x4000 + 8*(hartid))
@@ -55,7 +59,7 @@
 
 // map kernel stacks beneath the trampoline,
 // each surrounded by invalid guard pages.
-#define KSTACK(p) (TRAMPOLINE - ((p)+1)* 2*PGSIZE)
+#define KSTACK(p) (TRAMPOLINE - (p)*2*PGSIZE - 3*PGSIZE)
 
 // User memory layout.
 // Address zero first:
