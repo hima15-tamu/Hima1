@@ -31,16 +31,30 @@ def test_threadtest():
         'threadtest'
     ]))
 
-@test(20, "threadtest: testthreadrun", parent=test_threadtest)
+@test(15, "threadtest: testthreadrun", parent=test_threadtest)
 def test_threadtest_testthreadrun():
     r.match('^testthreadrun passed$')
 
-@test(20, "threadtest: testthreadmore", parent=test_threadtest)
+@test(15, "threadtest: testthreadmore", parent=test_threadtest)
 def test_threadtest_testthreadmore():
     r.match('^\\.?testthreadmore passed$')
 
-@test(15, "threadtest: testthreadsbrk", parent=test_threadtest)
+@test(10, "threadtest: testthreadsbrk", parent=test_threadtest)
 def test_threadtest_testthreadsbrk():
     r.match('^\\.?testthreadsbrk passed$')
+
+@test(0, "usertests")
+def test_usertests():
+    r.run_qemu(shell_script([
+        'usertests'
+    ]), timeout=900)
+
+def usertest_check(testcase, nextcase, output):
+    if not re.search(r'\ntest {}: [\s\S]*OK\ntest {}'.format(testcase, nextcase), output):
+        raise AssertionError('Failed ' + testcase)
+
+@test(20, "usertests: all tests", parent=test_usertests)
+def test_usertests_all():
+    r.match('^ALL TESTS PASSED$')
 
 run_tests()
