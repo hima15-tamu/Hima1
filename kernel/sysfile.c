@@ -85,13 +85,59 @@ sys_write(void)
   struct file *f;
   int n;
   uint64 p;
-  
+
   argaddr(1, &p);
   argint(2, &n);
   if(argfd(0, 0, &f) < 0)
     return -1;
 
   return filewrite(f, p, n);
+}
+
+uint64
+sys_aio_read(void)
+{
+  struct file *f;
+  int n, o;
+  uint64 p, s;
+  int r;
+
+  argaddr(1, &p);
+  argint(2, &n);
+  argint(3, &o);
+  argaddr(4, &s);
+  if(argfd(0, 0, &f) < 0)
+    return -1;
+
+  // offset is ignored in this implementation
+  r = fileread(f, p, n);
+  if (copyout(myproc()->pagetable, s, (char*)&r, sizeof(r)) < 0)
+    return -1;
+
+  return 0;
+}
+
+uint64
+sys_aio_write(void)
+{
+  struct file *f;
+  int n, o;
+  uint64 p, s;
+  int r;
+
+  argaddr(1, &p);
+  argint(2, &n);
+  argint(3, &o);
+  argaddr(4, &s);
+  if(argfd(0, 0, &f) < 0)
+    return -1;
+
+  // offset is ignored in this implementation
+  r = filewrite(f, p, n);
+  if (copyout(myproc()->pagetable, s, (char*)&r, sizeof(r)) < 0)
+    return -1;
+
+  return 0;
 }
 
 uint64

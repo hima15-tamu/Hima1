@@ -22,6 +22,8 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
+int aio_write(int, const void*, int, int, int*);
+int aio_read(int, void*, int, int, int*);
 
 // ulib.c
 int stat(const char*, struct stat*);
