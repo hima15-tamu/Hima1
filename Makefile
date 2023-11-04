@@ -236,7 +236,8 @@ endif
 
 ifeq ($(LAB),4)
 UPROGS += \
-	$U/_bigfile
+	$U/_bigfile \
+	$U/_aiotest
 endif
 
 ifeq ($(LAB),6)
