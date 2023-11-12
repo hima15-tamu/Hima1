@@ -30,15 +30,15 @@ def test_symlinktest_symlinks():
 @test(0, "running aiotest")
 def test_aiotest():
     r.run_qemu(shell_script([
-        'aiotest'
+        'aioreadtest'
     ]), timeout=600)
 
-@test(15, "aiotest: 20 read / write", parent=test_symlinktest)
+@test(15, "aiotest: 20 read", parent=test_aiotest)
 def test_aiotest_test20():
     r.match("^test20: ok$")
 
-@test(20, "symlinktest: concurrent symlinks", parent=test_symlinktest)
-def test_aiotest_test100():
+@test(20, "aiotest: 1000 read", parent=test_aiotest)
+def test_aiotest_test1000():
     r.match("^test1000: ok$")
 
 run_tests()
