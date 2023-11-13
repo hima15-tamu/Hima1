@@ -181,6 +181,8 @@ test1000()
           exit(-1);
         }
       }
+      close(fds[i]);
+      exit(0);
     }
   }
 
