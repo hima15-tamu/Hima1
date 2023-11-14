@@ -24,9 +24,15 @@ struct superblock {
 
 #define FSMAGIC 0x10203040
 
-#define NDIRECT 12
+/** 修改为一些常量
+
+*/
+#define NDIRECT 11
+// 倒数第二位映射的 256 个
 #define NINDIRECT (BSIZE / sizeof(uint))
-#define MAXFILE (NDIRECT + NINDIRECT)
+// 倒数第一位映射的二级 256 * 256 个
+#define NINDIRECT2 (BSIZE / sizeof(uint) * BSIZE / sizeof(uint))
+#define MAXFILE (NDIRECT + NINDIRECT + NINDIRECT2)
 
 // On-disk inode structure
 struct dinode {
@@ -35,7 +41,12 @@ struct dinode {
   short minor;          // Minor device number (T_DEVICE only)
   short nlink;          // Number of links to inode in file system
   uint size;            // Size of file (bytes)
+  /** 把 addrs 更改为 NDIRECT + 2 因为 dinode 原有长度不能变
+   * 此外， addrs 的倒数第二位用来找到一个 block 做 256 个映射
+   * addrs 的倒数第一位用用来映射一个 block ，这个 block 上的每一个地址再映射一个 block 作为映射表
   uint addrs[NDIRECT+1];   // Data block addresses
+  */
+  uint addrs[NDIRECT + 2];
 };
 
 // Inodes per block.
